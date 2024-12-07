@@ -1,0 +1,124 @@
+\chapter{\textit{Simulação e Controle}}
+
+Este capítulo será dedicado a relacionar o que foi falado até o momento com o projeto disponibilizado pelo MATLAB e a Parrot. Dessa forma a simulação será executada para alguns cenários de interesse e serão gerados gráficos para análise de desempenho dos controladores atuais. Assim permitindo a proposta de melhorias onde for necessário.
+
+\section{Configuração do Modelo no MATLAB Simulink}
+
+Para configurar o modelo no MATLAB, existe uma documentação oficial no site da mathworks*adicionar citação*, que pode ser utilizada, mas além disso uma boa proposta é seguir o trabalho de LI, David, que apresenta um forma mais simples de configuração tanto para a simulação, quanto para testar o quadricóptero físico. Nesse trabalho o objetivo é trabalhar apenas com a simulação, então para iniciar a simulação deve-se rodar o comando \textit{asbQuadcopterStart} no MATLAB, após instalar as dependências necessárias. É importante notar que a princípio as modificações que são feitas no projeto não têm nenhum intuito de melhorar a performance dos controladores ou o desempenho do modelo as configuraçôes que serão citadas a seguir só tem o papel de deixar o modelo pronto para executar as simulações com as entradas que vamos inserir e facilitar a obtenção das saídas de forma que possamos coloca-las em gráficos e realizar a análise.
+
+\subsection{Configurando Entradas e Saídas}
+
+Uma trajetória de voo, pode ser completamente descrita, sabendo como as coordenadas em x, y e z e a guinada do quadricóptero se comportam durante o tempo de simulação, mas como já falado na seção de controle os ângulos de rolagem e arfagem são mais importantes do que as coordenadas em x e y, quando queremos controlar o quadricóptero. Assim, é interesse desse trabalho observar o comportamento dos seis graus de liberdade que existem na simulação, as coordenadas em x, y e z, bem como rolagem, arfagem e guinada. 
+
+\subsubsection{Configuração das entradas}
+
+Esse modelo oferece quatro possíveis forma de entrada, Editor de Sinal, Joystick, Dados(em arquivo no formato .mat), planilha de dados(dados no formato .xlsx). Aqui como sugerido por David Li, vamos utilizar apenas editor de sinais para criar os cenários de simulação, após fazer algumas modificações necessárias para permitir a implementação correta no Simulink.
+
+\subsubsection{Configuração de Saída}
+
+Para as saídas, o modelo inclui estados estimados e valores de referência. No entanto, foram adicionados blocos extras, conforme descrito por Li \cite{li2022}, para incluir os valores de estado "verdadeiros" na simulação, permitindo uma comparação mais completa entre os valores estimados e simulados.
+
+ 
+\section{Simulação e Resultados}
+
+Nessa seção será apresentada a técnica utilizada para realizar as simulações, bem como os resultados obtidos na simulação.
+
+\subsection{Simulação}
+
+O projeto já têm dois cenários para simulação prontos dentro do bloco de edição de sinais, \textit{Hover}(Voo pairado) e \textit{Landing Search}(Voo buscando um local pré determinado para pouso). O cenário \textit{Landing Search}, não é do nosso interesse no momento pois é um cenário mais complexo, onde o drone utiliza a câmera para procurar um ponto vermelho onde deveria pousar. Como nosso interesse é estudar e entender o desempenho dos contralores, a melhor forma de obter esses resultados é com cenários mais simples como \textit{Hover}, *adicionar cenários que vão ter simulados*.
+
+\subsubsection{Criando cenários}
+
+Para criação ou edição de algum cenário existente, precisamos acessar o \textit{Signal Editor}, abrir o bloco \textit{Position/Attitude Reference}, e clicar no botão circulado em vermelho que abrirá o editor de sinais.
+
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=1\textwidth]{signal-editor-open.png}
+	\caption{Como abrir o Editor de Sinais}
+	\centering
+	\label{sinal-editor-open}
+\end{figure}
+
+No editor de sinais, podemos inserir nossos dados de entrada, para os nossos seis graus de liberdade, e em qual momento da simulação o sinal será enviado.
+
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=1\textwidth]{signal-editor-xyz-hover.png}
+	\caption{Modificando cenários de Simulação X Y Z}
+	\centering
+	\label{sinal-editor-xyz-hover}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=1\textwidth]{signal-editor-pry-hover.png}
+	\caption{Modificando cenários de Simulação Guinada, Arfagem e Rolagem}
+	\centering
+	\label{signal-editor-pry-hover}
+\end{figure}
+
+
+Para executar os cenários de forma programática e pegar os resultados, utilizaremos um código retirado também da nossa principal referência nesse capítulo.
+
+\begin{lstlisting}[language=Matlab, caption={Configuração de Cenários no MATLAB Simulink}]
+	scenarios = {'TesteXY3'; 'LandingSearch'};
+	TFinals = [25;30];
+	
+	in = Simulink.SimulationInput.empty(size(scenarios, 1), 0);
+	for i = 1 : size(scenarios, 1)
+		in(i) = Simulink.SimulationInput('asbQuadcopter');
+		in(i) = in(i).setBlockParameter(['flightControlSystem/Flight Control System/' ...
+			'landing logic/Position//Attitude Reference'], ...
+			'ActiveScenario', scenarios{i});
+		in(i) = in(i).setVariable('TFinal', TFinals(i), 'Workspace', 'asbQuadcopter');
+	end
+	
+	out = sim(in(1)); % simulate with the "Hover" scenario for 10 seconds
+\end{lstlisting}
+
+No código acima, as linhas 1 e 2 definem o cenário que pretendemos simular(previamente criado dentro do editor de sinais), e o tempo de simulação, respectivamente. O laço de repetição da linha 5 a 11, coloca o cenário no bloco Position/Attitude Reference que está dentro de \textit{Landing logic}, que foi inserido após as modificações que seguimos na seção \textit{configuraçôes de entrada}. A linha 13, executa a simulação com o cenário escolhido e salva os resultados na variável \textit{out}.
+
+A variável \textit{out}, contém todas as informações que são do nosso interesse, no seguinte formato:
+
+\begin{lstlisting}[language=Matlab, caption={Exemplo de extração de dados simulados}, numbers=left, backgroundcolor=\color{lightgray}]
+	t = out.posref.time;
+	xyzrpy = out.xyzrpy;
+	estim = out.estim.signals.values;
+	posref = out.posref.signals.values;
+	motor = out.motor.signals.values;
+	sensor = out.sensor.signals.values;
+\end{lstlisting}
+
+Com isso, agora podemos executar os cenários com facilidade e colocar os resultados de forma gráfica, para observamos o comportamento dos controladores.
+
+\subsection{Resultados}
+
+Nesta seção, será realizada a análise dos gráficos gerados a partir das simulações realizadas no MATLAB Simulink. O objetivo principal é avaliar o desempenho dos controladores do quadricóptero em diferentes cenários, com foco no comportamento das variáveis de interesse, como a posição \(x\), \(y\), \(z\) e os ângulos de rolagem, arfagem e guinada.
+
+Para interpretar os gráficos de desempenho, serão consideradas as seguintes métricas:
+\begin{itemize}
+    \item \textbf{Tempo de estabilização}: Tempo necessário para que o sistema se estabilize após uma mudança de referência ou perturbação.
+    \item \textbf{Overshoot (ultrapassagem)}: A porcentagem que a resposta do sistema excede o valor de referência antes de se estabilizar.
+    \item \textbf{Erro em regime permanente}: A diferença entre o valor final da variável controlada e o valor de referência após o sistema estabilizar.
+    \item \textbf{Tempo de subida}: O tempo que o sistema leva para sair de 10\% a 90\% do valor final após uma mudança de referência.
+\end{itemize}
+
+Essas métricas permitirão avaliar a eficácia dos controladores em manter o quadricóptero estável e responsivo, principalmente no cenário de voo pairado (\textit{Hover}), onde a precisão de posição e estabilidade são cruciais.
+
+Os gráficos apresentam o comportamento das coordenadas do quadricóptero ao longo do tempo nos cenários de interesse montados. Ele compara três curvas: \textbf{Posição verdadeiro} (linha azul), que representa a altura real do quadricóptero; \textbf{Posição estimado} (linha laranja), que é a estimativa feita pelo sistema; e \textbf{Posição referência} (linha amarela), que é o valor de referência.
+
+Nas curvas de atitude, é necessário elucidar melhor os termos os termos utilizados. Assim, aqui é preciso lembrar que para o quadricóptero realizar movimentos horinzontais, é necessário que aconteça uma arfagem ou rolagem, e no controlador de voo, temos um subsistema que converte os valore de de referência de x e y, em comandos de rolagem e arfagem. Nos gráficos, a resultande desses valores são chamados de  \textbf{comando de arfagem} e \textbf{comando de rolagem}.
+
+\input{hover.tex}
+%\input{altitudeChange.tex}
+%\input{pitch.tex}
+%\input{roll.tex}
+
+%---------------------------------------------------------------------
+% INDICE REMISSIVO
+%---------------------------------------------------------------------
+\phantompart
+\printindex
+%---------------------------------------------------------------------

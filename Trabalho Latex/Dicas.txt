@@ -1,0 +1,3 @@
+Definir sinais de entrada
+
+Como o parrot mambo determina as entradas dos motores.

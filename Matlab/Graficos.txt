@@ -1,0 +1,25 @@
+ estim = out.estim.signals.values;
+ posref = out.posref.signals.values;
+ motor = out.motor.signals.values;
+ sensor = out.sensor.signals.values;
+ plot(t, xyzrpy(:, 1) - xyzrpy(1, 1) * ones(size(t)), t, estim(:, 1), t, posref(:, 1), ...
+ 'LineWidth', 2);
+ legend('True x', 'Estimated x', 'Reference x', 'Location', 'best');
+xlabel('Time [s]');
+ ylabel('x-coordinate [m]');
+title('asbQuadcopter');
+ grid on;
+
+ plot(t, xyzrpy(:, 2) - xyzrpy(1, 2) * ones(size(t)), t, estim(:, 2), t, posref(:, 2), ... 'LineWidth', 2);
+ legend('True y', 'Estimated y', 'Reference y', 'Location', 'best');
+ xlabel('Time [s]');
+ ylabel('y-coordinate [m]');
+ title('asbQuadcopter');
+ grid on;
+
+plot(t, xyzrpy(:, 3), t, estim(:, 3), t, posref(:, 3), 'LineWidth', 2);
+legend('True z', 'Estimated z', 'Reference z', 'Location', 'best');
+xlabel('Time [s]');
+ylabel('z-coordinate [m]');
+title('asbQuadcopter');
+grid on;

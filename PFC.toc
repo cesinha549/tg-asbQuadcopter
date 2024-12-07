@@ -1,0 +1,24 @@
+\changetocdepth {4}
+\babel@toc {brazil}{}\relax 
+\babel@toc {brazil}{}\relax 
+\contentsline {chapter}{Sum\'ario}{3}{section*.2}%
+\setlength {\cftchapterindent }{\cftlastnumwidth } \setlength {\cftchapternumwidth }{2em}
+\setlength {\cftchapterindent }{0em} \setlength {\cftchapternumwidth }{\cftlastnumwidth }
+\contentsline {chapter}{\chapternumberline {1}\MakeUppercase []{\textit {Modelagem dinâmica}}}{5}{chapter.1}%
+\contentsline {section}{\numberline {1.1}Modelagem do quadrirrotor}{5}{section.1.1}%
+\contentsline {subsection}{\numberline {1.1.1}Sistemas de coordenadas}{5}{subsection.1.1.1}%
+\contentsline {subsection}{\numberline {1.1.2}Matrizes de rotação}{5}{subsection.1.1.2}%
+\contentsline {subsection}{\numberline {1.1.3}Configuração do veículo}{7}{subsection.1.1.3}%
+\contentsline {subsection}{\numberline {1.1.4}Dinâmica transacional}{8}{subsection.1.1.4}%
+\contentsline {subsection}{\numberline {1.1.5}Forças aerodinâmicas}{9}{subsection.1.1.5}%
+\contentsline {subsection}{\numberline {1.1.6}Cinemática de Rotação}{12}{subsection.1.1.6}%
+\contentsline {subsection}{\numberline {1.1.7}Dinâmica de Rotação}{13}{subsection.1.1.7}%
+\contentsline {subsection}{\numberline {1.1.8}Modelo dinâmico do quadricóptero}{14}{subsection.1.1.8}%
+\vspace {\cftbeforechapterskip }
+\setlength {\cftchapterindent }{0em} \setlength {\cftchapternumwidth }{\cftlastnumwidth }
+\contentsline {chapter}{\chapternumberline {2}\MakeUppercase []{\textit {Análise dinâmica e Controle Mini Parrot}}}{17}{chapter.2}%
+\contentsline {section}{\numberline {2.1}Características do quadricóptero}{17}{section.2.1}%
+\contentsline {section}{\numberline {2.2}O projeto do quadricóptero no Matlab Simulink}{18}{section.2.2}%
+\contentsline {subsection}{\numberline {2.2.1}Sistema de Controle de Voo}{19}{subsection.2.2.1}%
+\contentsline {subsection}{\numberline {2.2.2}Controlador}{21}{subsection.2.2.2}%
+\vspace {\cftbeforechapterskip }
