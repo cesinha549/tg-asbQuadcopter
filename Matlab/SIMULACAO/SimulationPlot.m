@@ -1,5 +1,5 @@
 scenarios = {'Hover'};
-TFinals = [25;30];
+TFinals = [10;30];
 
 in = Simulink.SimulationInput.empty(size(scenarios, 1), 0);
 for i = 1 : size(scenarios, 1)
