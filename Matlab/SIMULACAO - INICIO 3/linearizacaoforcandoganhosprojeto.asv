@@ -1,0 +1,76 @@
+function optimizeAltitudePID()
+% optimizeAltitudePID - Optimize PID controller for altitude control
+% This script performs optimization of a PID controller for the altitude
+% control of a quadcopter using a linearized system model.
+%
+% The optimization uses Simulink Control Design(TM).
+
+% Load linearized system
+load('linearizedAirframe.mat', 'linsys'); % Ensure the path to this file is correct
+
+% Aggregate all actuators to compute total thrust (indexes 1 to 4 for actuators)
+actuatorIndexes = 1:4;
+altitudeOutputIndex = 30; % X_ned(3) represents altitude in the NED frame
+
+% Initialize altitude dynamics as the first actuator's contribution
+linsysAltitude = linsys(altitudeOutputIndex, actuatorIndexes(1));
+
+% Add contributions from the other actuators
+for i = 2:length(actuatorIndexes)
+    linsysAltitude = linsysAltitude + linsys(altitudeOutputIndex, actuatorIndexes(i));
+end
+
+% Assign generic input and output names
+linsysAltitude.InputName = {'Thrust'}; % Aggregate thrust as input
+linsysAltitude.OutputName = {'Altitude'}; % Altitude as output
+
+% Define tunable PID controller with initial values
+pidTuner = tunablePID('AltitudePID', 'PID');
+pidTuner.Kp.Value = 0.5; % Initial proportional gain
+pidTuner.Ki.Value = 0.1; % Initial integral gain
+pidTuner.Kd.Value = 0.01; % Initial derivative gain
+
+% Create a closed-loop system
+altitudeCLSys = feedback(pidTuner * linsysAltitude, 1);
+
+% Assign input and output names to the closed-loop system
+altitudeCLSys.InputName = {'Thrust'};
+altitudeCLSys.OutputName = {'Altitude'};
+
+% Define tuning goals
+trackingGoal = TuningGoal.Tracking('Thrust', 'Altitude', 1); % Tracking goal
+marginGoal = TuningGoal.Margins('Thrust', 6, 45); % Stability margin goal
+loopShapeGoal = TuningGoal.LoopShape('Thrust', bandwidthToShape(1)); % Bandwidth goal
+
+% Combine goals
+tuningGoals = trackingGoal;
+
+% Tune the PID controller with multiple random starts
+opts = systuneOptions('RandomStart', 10, 'UseParallel', true);
+[optSys, optInfo] = systune(altitudeCLSys, tuningGoals, opts);
+
+% Extract the optimized PID gains
+optGains = getBlockValue(optSys, 'AltitudePID');
+
+% Display optimized PID gains
+disp('Optimized PID Gains for Altitude Control:');
+disp(['Kp: ', num2str(optGains.Kp)]);
+disp(['Ki: ', num2str(optGains.Ki)]);
+disp(['Kd: ', num2str(optGains.Kd)]);
+
+% Validate the closed-loop system
+clSys = feedback(optSys * linsysAltitude, 1);
+figure;
+step(clSys);
+title('Step Response of Closed-Loop Altitude System');
+
+% Save the optimized gains to a file
+save('optimizedAltitudePID.mat', 'optGains', 'optInfo');
+
+end
+
+function LS = bandwidthToShape(bw)
+% bandwidthToShape - Generate loop shape function for given bandwidth
+% A simple loop shape template to enforce stability margins implicitly.
+LS = tf([1/bw, 1], [1/bw^2, 2/bw, 1]);
+end
